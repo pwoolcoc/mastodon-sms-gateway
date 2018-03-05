@@ -7,11 +7,11 @@ import records
 from mastodon import Mastodon
 import twilio
 
-from controllers.user import UserController, UserExists
-from controllers.oauth_session import OAuthSessionController
-from controllers.domain import DomainController, CouldNotConnect
-from models.domain import Domain
-from models.user import User
+from sms_gateway.controllers.user import UserController, UserExists
+from sms_gateway.controllers.oauth_session import OAuthSessionController
+from sms_gateway.controllers.domain import DomainController, CouldNotConnect
+from sms_gateway.models.domain import Domain
+from sms_gateway.models.user import User
 
 # For now we are using SQLite for development, but we should be able to switch
 # to postgres or something else fairly easily since we aren't doing any crazy
@@ -80,6 +80,10 @@ def signup():
 
 @app.route('/login', methods=('GET', 'POST'))
 def login():
+    """
+    This route serves both the login form and also handles the POST from the
+    login form
+    """
     if request.method == 'POST':
         user = request.form['user']
         user_controller = UserController(get_db())
@@ -87,7 +91,11 @@ def login():
         return do_login(user, user_controller)
     return render_template('login.html')
 
-def do_login(user, user_controller):
+def do_login(user: User, user_controller: UserController):
+    """
+    This is a method that takes care of all the login-related things that
+    happen in a couple places in this app
+    """
     login_user(user)
 
     next = request.args.get('next')
@@ -99,33 +107,60 @@ def do_login(user, user_controller):
 
 @app.route("/logout")
 def logout():
+    """
+    Logout route, simple enough
+    """
     logout_user()
     return redirect(url_for('index'))
 
 @app.route('/', methods=('GET',))
 def index():
+    """
+    This will be the main non-logged-in landing page
+    """
     return render_template('index.html')
 
 @app.route('/app')
 @login_required
 def runapp():
+    """
+    This will be the main logged-in landing page
+    """
     return render_template('app.html')
 
 @login_manager.user_loader
 def get_user(user_id):
+    """
+    This method is required by Flask-Login, so it knows how to get a User
+    object from a user id
+    """
     user_controller = UserController(get_db())
     return user_controller.get_by_id(user_id)
 
 def is_safe_url(target):
+    """
+    Shamelessly stolen from a flask snippet, to make sure we don't redirect to
+    a different host
+    """
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http', 'https') and \
         ref_url.netloc == test_url.netloc
 
+"""
+This `if` statement makes it so the code block under it is only executed when
+this file is run directly. Code that imports this file wouldn't run it, but if
+you run `python app.py`, this will run
+"""
 if __name__ == '__main__':
     import os
     from migrations import migrate
     migrate(get_db())
 
-    app.secret_key=os.urandom(24)
+    secret_key = os.environ.get('SECRET_KEY', None)
+    if secret_key is None:
+        app.secret_key = os.urandom(24)
+    else:
+        app.secret_key = secret_key
+
     app.run(debug=True)

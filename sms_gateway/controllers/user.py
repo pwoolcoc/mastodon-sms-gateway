@@ -3,11 +3,11 @@ from mastodon import Mastodon
 from records import Database
 from uuid import uuid4
 
-from controllers.base import BaseController
-from controllers.domain import DomainController
-from controllers.oauth_session import OAuthSessionController
-from models.user import User
-from models.domain import Domain
+from sms_gateway.controllers.base import BaseController
+from sms_gateway.controllers.domain import DomainController
+from sms_gateway.controllers.oauth_session import OAuthSessionController
+from sms_gateway.models.user import User
+from sms_gateway.models.domain import Domain
 
 sentinel = object()
 

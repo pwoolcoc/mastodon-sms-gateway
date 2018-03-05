@@ -2,7 +2,7 @@ from flask import Session
 from uuid import uuid4
 from records import Database
 
-from controllers.base import BaseController
+from sms_gateway.controllers.base import BaseController
 
 class OAuthSessionController(BaseController):
     def __init__(self, db: Database):

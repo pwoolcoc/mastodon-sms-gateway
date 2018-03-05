@@ -3,9 +3,9 @@ from records import Database
 from mastodon import Mastodon
 from mastodon.Mastodon import MastodonNetworkError
 
-from controllers.base import BaseController
-from controllers.oauth_session import OAuthSessionController
-from models.domain import Domain
+from sms_gateway.controllers.base import BaseController
+from sms_gateway.controllers.oauth_session import OAuthSessionController
+from sms_gateway.models.domain import Domain
 
 class CouldNotConnect(Exception):
     pass

@@ -33,5 +33,5 @@ class OAuthSessionController(BaseController):
         return None
 
     def delete_from_session(self, session: Session):
-        uuid = session['uuid']
+        uuid = session['signup_uuid']
         return self.delete(uuid)

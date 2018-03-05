@@ -45,6 +45,7 @@ MIGRATIONS = [
     '''
     CREATE TABLE users (
         id INTEGER PRIMARY KEY,
+        uuid TEXT NOT NULL,
         user TEXT NOT NULL,
         auth_token TEXT NOT NULL,
         domain_id INTEGER NOT NULL,

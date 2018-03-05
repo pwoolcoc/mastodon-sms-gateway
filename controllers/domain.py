@@ -6,6 +6,9 @@ from controllers.base import BaseController
 from controllers.oauth_session import OAuthSessionController
 from models.domain import Domain
 
+class DomainDoesntExist(Exception):
+    pass
+
 class DomainController(BaseController):
     def __init__(self, db: Database, oauth_controller=None):
         self.db = db
@@ -17,10 +20,8 @@ class DomainController(BaseController):
 
     def get_or_insert(self, domain: str) -> Domain:
         if self.domain_exists(domain):
-            print("domain exists")
             domain = self.get_domain(domain)
         else:
-            print("domain does not exist, creating")
             domain = self.insert_new_domain(domain)
         return domain
 
@@ -32,7 +33,6 @@ class DomainController(BaseController):
         ''', domain=domain)
         result = rows.first()
         if not result:
-            print("couldn't find domain?")
             return None
         return Domain.fromrecord(result)
 
@@ -43,15 +43,11 @@ class DomainController(BaseController):
         where domain = :domain
         ''', domain=domain)
         if rows.first():
-            print("domain", domain, "exists")
             return True
-        print("domain does not exist")
         return False
 
     def insert_new_domain(self, domain: str) -> Domain:
-        print("creating domain", domain)
         fulldomain = self.register_domain(domain)
-        print('full domain: ', fulldomain)
         #TODO when upgrading to 0.5.3/0.6, this will need to change to:
         # with db.transaction() as conn:
         #     conn.query(..)
@@ -74,7 +70,6 @@ class DomainController(BaseController):
 
     def register_domain(self, domain: str) -> dict:
         redirect_uri = self.get_redirect_uri()
-        print("redirect: ", redirect_uri)
         client_id, client_secret = Mastodon.create_app('sms-gateway', scopes=['read', 'write'],
                 redirect_uris=redirect_uri,
                 api_base_url='https://{0}'.format(domain), request_timeout=600)
@@ -87,3 +82,13 @@ class DomainController(BaseController):
         domain = sess['domain']
         return self.get_domain(domain)
 
+    def get_by_id(self, id: str) -> Domain:
+        result = self.db.query('''
+        select id, domain, client_id, client_secret
+        from domains
+        where id = :id
+        ''', id=id)
+        row = result.first()
+        if not row:
+            raise DomainDoesntExist
+        return Domain.fromrecord(row)

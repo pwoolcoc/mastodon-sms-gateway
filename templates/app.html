@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+    <body>
+        <nav>
+            <ul>
+                <li><a href='/logout'>Logout</a></li>
+            </ul>
+        </nav>
+        {% if current_user.is_authenticated %}
+        <section>
+            hello {{ current_user.user }}!
+        </section>
+        {% endif %}
+    </body>
+</html>
+

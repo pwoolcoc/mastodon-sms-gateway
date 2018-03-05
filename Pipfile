@@ -12,6 +12,7 @@ twilio = "*"
 flask = "*"
 records = "*"
 uuid = "*"
+flask-login = "*"
 
 
 [dev-packages]

@@ -1,6 +1,9 @@
 <!doctype html>
 <html>
     <body>
+        {% if error %}
+            <p>{{ error }}</p>
+        {% endif %}
         <form action="/signup" method="POST">
             <label for="user">username</label>
             <input type="text" name="user" id="user">

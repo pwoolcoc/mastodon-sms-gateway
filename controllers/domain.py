@@ -1,10 +1,14 @@
 from flask import Session
 from records import Database
 from mastodon import Mastodon
+from mastodon.Mastodon import MastodonNetworkError
 
 from controllers.base import BaseController
 from controllers.oauth_session import OAuthSessionController
 from models.domain import Domain
+
+class CouldNotConnect(Exception):
+    pass
 
 class DomainDoesntExist(Exception):
     pass
@@ -70,9 +74,12 @@ class DomainController(BaseController):
 
     def register_domain(self, domain: str) -> dict:
         redirect_uri = self.get_redirect_uri()
-        client_id, client_secret = Mastodon.create_app('sms-gateway', scopes=['read', 'write'],
-                redirect_uris=redirect_uri,
-                api_base_url='https://{0}'.format(domain), request_timeout=600)
+        try:
+            client_id, client_secret = Mastodon.create_app('sms-gateway', scopes=['read', 'write'],
+                    redirect_uris=redirect_uri,
+                    api_base_url='https://{0}'.format(domain), request_timeout=600)
+        except MastodonNetworkError as e:
+            raise CouldNotConnect(domain)
         return dict(domain=domain, client_id=client_id,
                 client_secret=client_secret)
 

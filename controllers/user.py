@@ -9,10 +9,12 @@ from controllers.oauth_session import OAuthSessionController
 from models.user import User
 from models.domain import Domain
 
+sentinel = object()
+
 class UserExists(Exception):
     pass
 
-class UserDoesntExist(Exception):
+class UserNotFound(Exception):
     pass
 
 class UserController(BaseController):
@@ -55,7 +57,7 @@ class UserController(BaseController):
         return mastodon.auth_request_url(scopes=['read', 'write'],
                 redirect_uris=self.get_redirect_uri())
 
-    def get_by_user_and_domain(self, user: str, domain: str) -> User:
+    def get_by_user_and_domain(self, user: str, domain: str, default=sentinel) -> User:
         result = self.db.query('''
         select users.id, users.uuid, users.user, users.auth_token, users.domain_id
         from users
@@ -66,10 +68,13 @@ class UserController(BaseController):
         user = result.first()
         if user:
             return User.fromrecord(user)
-        return None
+        if default is sentinel:
+            raise UserNotFound
+        else:
+            return default
 
     def user_exists(self, user: str, domain: str) -> bool:
-        user = self.get_by_user_and_domain(user, domain)
+        user = self.get_by_user_and_domain(user, domain, default=None)
         if user is not None:
             return True
         return False
@@ -97,7 +102,7 @@ class UserController(BaseController):
             oauth_session = self.oauth_controller.get(uuid)
             domain = self.domain_controller.get_domain(oauth_session['domain'])
             auth_token = self.get_auth_token(code, domain)
-            self.create(oauth_session['user'], domain, auth_token)
+            return self.create(oauth_session['user'], domain, auth_token)
         finally:
             self.oauth_controller.delete(uuid)
 
@@ -116,7 +121,7 @@ class UserController(BaseController):
         user, domain = self.extract_user_domain(user)
         user_rec = self.get_by_user_and_domain(user, domain)
         if user_rec is None:
-            raise UserDoesntExist
+            raise UserNotFound
         return user_rec
 
     def get_domain(self, user: User) -> Domain:

@@ -1,0 +1,8 @@
+= Mastodon SMS Bridge
+
+This is a small application that let's a mastodon user connect their account with an SMS number, which then lets them do some
+tooting over a standard SMS message
+
+The SMS format is designed to be similar to Twitter's SMS format
+
+You will need 1) a valid Twilio account + SMS number and 2) a valid mastodon account, to make this work

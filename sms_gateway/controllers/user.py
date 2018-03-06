@@ -19,17 +19,21 @@ class UserNotFound(Exception):
 
 class UserController(BaseController):
     def __init__(self, db: Database, oauth_controller=None,
-            domain_controller=None):
+            domain_controller=None, mastodon=Mastodon):
         self.db = db
         if domain_controller is None:
             self.domain_controller = DomainController(db)
         else:
             self.domain_controller = domain_controller
 
+        self.domain_controller.mastodon = mastodon
+
         if oauth_controller is None:
             self.oauth_controller = OAuthSessionController(db)
         else:
             self.oauth_controller = oauth_controller
+
+        self.mastodon = mastodon
 
     def begin_registration(self, user: str, host) -> str:
         user, domain = self.extract_user_domain(user)
@@ -51,7 +55,7 @@ class UserController(BaseController):
         if self.user_exists(user, domain):
             raise UserExists
         domain = self.domain_controller.get_or_insert(domain, host)
-        mastodon = Mastodon(client_id=domain.client_id,
+        mastodon = self.mastodon(client_id=domain.client_id,
                             client_secret=domain.client_secret,
                             api_base_url=domain.domain)
         return mastodon.auth_request_url(scopes=['read', 'write'],
@@ -80,7 +84,7 @@ class UserController(BaseController):
         return False
 
     def get_auth_token(self, grant_code: str, domain: Domain, host: str) -> str:
-        mastodon = Mastodon(client_id=domain.client_id,
+        mastodon = self.mastodon(client_id=domain.client_id,
                 client_secret=domain.client_secret, api_base_url=domain.domain)
         auth_token = mastodon.log_in(code=grant_code,
             redirect_uri=self.get_redirect_uri(host), scopes=['read', 'write'])
@@ -129,7 +133,7 @@ class UserController(BaseController):
 
     def get_masto_client(self, user: User) -> Mastodon:
         domain = self.get_domain(user)
-        mastodon = Mastodon(client_id=domain.client_id,
+        mastodon = self.mastodon(client_id=domain.client_id,
                         client_secret=domain.client_secret,
                         access_token=user.auth_token, api_base_url=domain.domain)
         return mastodon

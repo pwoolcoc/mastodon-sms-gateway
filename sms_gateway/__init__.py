@@ -48,7 +48,7 @@ def oauth_masto_redirect():
     user_controller = UserController(db, oauth_controller=oauth_controller,
             domain_controller=domain_controller)
 
-    user = user_controller.create_from_session(code, session)
+    user = user_controller.create_from_session(code, session, request.host_url)
     return do_login(user, user_controller)
 
 @app.route("/signup", methods=('GET', 'POST'))
@@ -66,7 +66,8 @@ def signup():
         db = get_db()
         user_controller = UserController(db)
         try:
-            redirect_uri = user_controller.begin_registration(user)
+            redirect_uri = user_controller.begin_registration(user,
+                    request.host_url)
             return redirect(redirect_uri)
         except CouldNotConnect as e:
             error = "Could not connect to host {0}".format(e)

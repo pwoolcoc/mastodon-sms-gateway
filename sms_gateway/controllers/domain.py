@@ -22,11 +22,11 @@ class DomainController(BaseController):
         else:
             self.oauth_controller = oauth_controller
 
-    def get_or_insert(self, domain: str) -> Domain:
+    def get_or_insert(self, domain: str, host: str) -> Domain:
         if self.domain_exists(domain):
             domain = self.get_domain(domain)
         else:
-            domain = self.insert_new_domain(domain)
+            domain = self.insert_new_domain(domain, host)
         return domain
 
     def get_domain(self, domain: str) -> Domain:
@@ -50,8 +50,8 @@ class DomainController(BaseController):
             return True
         return False
 
-    def insert_new_domain(self, domain: str) -> Domain:
-        fulldomain = self.register_domain(domain)
+    def insert_new_domain(self, domain: str, host: str) -> Domain:
+        fulldomain = self.register_domain(domain, host)
         #TODO when upgrading to 0.5.3/0.6, this will need to change to:
         # with db.transaction() as conn:
         #     conn.query(..)
@@ -72,8 +72,8 @@ class DomainController(BaseController):
         domain = Domain.fromrecord(first)
         return domain
 
-    def register_domain(self, domain: str) -> dict:
-        redirect_uri = self.get_redirect_uri()
+    def register_domain(self, domain: str, host: str) -> dict:
+        redirect_uri = self.get_redirect_uri(host)
         try:
             client_id, client_secret = Mastodon.create_app('sms-gateway', scopes=['read', 'write'],
                     redirect_uris=redirect_uri,

@@ -31,12 +31,12 @@ class UserController(BaseController):
         else:
             self.oauth_controller = oauth_controller
 
-    def begin_registration(self, user: str) -> str:
+    def begin_registration(self, user: str, host) -> str:
         user, domain = self.extract_user_domain(user)
         if user is None or domain is None:
             raise ValueError('incorrect user string')
         else:
-            redirect_uri = self.get_register_uri(user, domain)
+            redirect_uri = self.get_register_uri(user, domain, host)
             sess = self.oauth_controller.add(user, domain)
             session['signup_uuid'] = sess['uuid']
             return redirect_uri
@@ -47,15 +47,15 @@ class UserController(BaseController):
         user, domain = user.lstrip('@').split('@')
         return (user, domain)
 
-    def get_register_uri(self, user: str, domain: str) -> str:
+    def get_register_uri(self, user: str, domain: str, host: str) -> str:
         if self.user_exists(user, domain):
             raise UserExists
-        domain = self.domain_controller.get_or_insert(domain)
+        domain = self.domain_controller.get_or_insert(domain, host)
         mastodon = Mastodon(client_id=domain.client_id,
                             client_secret=domain.client_secret,
                             api_base_url=domain.domain)
         return mastodon.auth_request_url(scopes=['read', 'write'],
-                redirect_uris=self.get_redirect_uri())
+                redirect_uris=self.get_redirect_uri(host))
 
     def get_by_user_and_domain(self, user: str, domain: str, default=sentinel) -> User:
         result = self.db.query('''
@@ -79,11 +79,11 @@ class UserController(BaseController):
             return True
         return False
 
-    def get_auth_token(self, grant_code: str, domain: Domain) -> str:
+    def get_auth_token(self, grant_code: str, domain: Domain, host: str) -> str:
         mastodon = Mastodon(client_id=domain.client_id,
                 client_secret=domain.client_secret, api_base_url=domain.domain)
         auth_token = mastodon.log_in(code=grant_code,
-            redirect_uri=self.get_redirect_uri(), scopes=['read', 'write'])
+            redirect_uri=self.get_redirect_uri(host), scopes=['read', 'write'])
         return auth_token
 
     def create(self, username: str, domain: Domain, auth_token: str) -> User:
@@ -96,12 +96,12 @@ class UserController(BaseController):
             tx.commit()
         return self.get_by_id(uuid)
 
-    def create_from_session(self, code: str, session: Session) -> User:
+    def create_from_session(self, code: str, session: Session, host: str) -> User:
         try:
             uuid = session['signup_uuid']
             oauth_session = self.oauth_controller.get(uuid)
             domain = self.domain_controller.get_domain(oauth_session['domain'])
-            auth_token = self.get_auth_token(code, domain)
+            auth_token = self.get_auth_token(code, domain, host)
             return self.create(oauth_session['user'], domain, auth_token)
         finally:
             self.oauth_controller.delete(uuid)

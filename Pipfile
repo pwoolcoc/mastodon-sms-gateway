@@ -15,6 +15,7 @@ uuid = "*"
 flask-login = "*"
 pytest = "*"
 pytest-cov = "*"
+python-coveralls = "*"
 
 
 [dev-packages]

@@ -99,3 +99,7 @@ class DomainController(BaseController):
         if not row:
             raise DomainDoesntExist
         return Domain.fromrecord(row)
+
+    def getstats(self):
+        domains = self.db.query(''' select * from domains ''').all(as_dict=True)
+        return dict(count=len(domains), domains=domains)

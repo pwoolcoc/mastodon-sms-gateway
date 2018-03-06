@@ -1,8 +1,37 @@
 = Mastodon SMS Bridge
 
-This is a small application that let's a mastodon user connect their account with an SMS number, which then lets them do some
-tooting over a standard SMS message
+This is a small application that let's a mastodon user connect their account
+with an SMS number, which then lets them do some tooting over a standard SMS
+message
 
 The SMS format is designed to be similar to Twitter's SMS format
 
-You will need 1) a valid Twilio account + SMS number and 2) a valid mastodon account, to make this work
+You will need 1) a valid Twilio account + SMS number and 2) a valid mastodon
+account, to make this work
+
+== Installing Dependencies
+
+mastodon-sms-gateway uses link:pipenv[https://docs.pipenv.org] to manage
+dependencies and the virtualenv for the project. You can install it with `pip
+install pipenv` if you have pip, if not then look at the `pipenv` website for
+other installation options.
+
+When `pipenv` is installed, you can run `pipenv install` to install the
+virtualenv and dependencies, and `pipenv shell` to activate the virtualenv and
+get a shell. Alternatively, you can run `make init` in the top level of this
+repo, which will run `pipenv install` for you.
+
+== Running Tests
+
+The tests for the project can be found under the `tests/` subdirectory. If you
+have activated the pipenv shell then you can just run `py.test tests`, or if
+not then run `pipenv run py.test tests`. Alternatively, you can run `make test`
+which will run the latter command.
+
+== Running the Application
+
+To run the application, run `make run`. This will startup a debug instance of
+the application, running on port 5000. Once you see `Running on
+http://127.0.0.1:5000/ (Press CTRL+C to quit)` you should be able to visit
+link:http://localhost:5000/ in your browser and see the landing page of the
+app.

@@ -18,14 +18,30 @@ def migrate(db):
         num = 0
     else:
         num = max_num + 1
-    for i, migration in enumerate(MIGRATIONS[num:]):
+    for i, migration in enumerate(UP[num:]):
         db.query(migration)
         db.query('''
         insert into migrations (num, migration)
         values (:num, :migration)
         ''', num=num+i, migration=migration)
 
-MIGRATIONS = [
+
+def unmigrate(db):
+    rows = db.query('select max(num) as max_num from migrations')
+    result = rows.first()
+    max_num = result['max_num']
+    if not max_num:
+        num = 0
+    else:
+        num = max_num + 1
+    for i, migration in enumerate(reversed(DOWN[:num])):
+        db.query(migration)
+        db.query('''
+        delete from migrations
+        where num = :num
+        ''', num=num-i-1)
+
+UP = [
     '''
     CREATE TABLE domains (
         id INTEGER PRIMARY KEY,
@@ -54,4 +70,14 @@ MIGRATIONS = [
     ''',
 ]
 
-
+DOWN = [
+    '''
+    DROP TABLE IF EXISTS domains
+    ''',
+    '''
+    DROP TABLE IF EXISTS oauth_session
+    ''',
+    '''
+    DROP TABLE IF EXISTS users
+    ''',
+]

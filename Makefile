@@ -1,5 +1,5 @@
 test: init
-	pipenv run py.test -v tests
+	pipenv run pytest -vs tests
 
 run: Pipfile.lock
 	pipenv run python3 run.py

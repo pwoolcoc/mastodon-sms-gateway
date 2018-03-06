@@ -1,17 +1,18 @@
 import pytest
 import records
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from mastodon import Mastodon
 
 from sms_gateway.controllers.user import UserController, UserNotFound
 from sms_gateway.migrations import migrate, unmigrate
 from sms_gateway.models.user import User
+from sms_gateway.models.domain import Domain
 
 db = records.Database('sqlite:///:memory:')
 
 @pytest.fixture
 def controller():
-    return UserController(db, mastodon=patch('mastodon.Mastodon', autospec=True))
+    return UserController(db)
 
 @pytest.fixture
 def db_setup(request):
@@ -57,3 +58,14 @@ def test_get_by_user_and_domain_fails_with_default(controller, single_user):
 
 def test_user_exists(controller, single_user):
     assert controller.user_exists('foo', 'my.domain')
+
+def test_get_auth_token(controller, single_user):
+    controller.mastodon.log_in = Mock(name='log_in')
+    grant_code = 'abcdefgh'
+    domain = Domain(id=1, client_id='01234', client_secret='ghefcdab',
+            domain='my.domain')
+    host = 'http://example.com'
+    res = controller.get_auth_token(grant_code, domain, host)
+    controller.mastodon.log_in.assert_called_once_with(code=grant_code,
+            redirect_uri='http://example.com/redirect',
+            scopes=['read', 'write'])

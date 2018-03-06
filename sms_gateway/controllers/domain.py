@@ -14,13 +14,15 @@ class DomainDoesntExist(Exception):
     pass
 
 class DomainController(BaseController):
-    def __init__(self, db: Database, oauth_controller=None):
+    def __init__(self, db: Database, oauth_controller=None, mastodon=Mastodon):
         self.db = db
 
         if oauth_controller is None:
             self.oauth_controller = OAuthSessionController(db)
         else:
             self.oauth_controller = oauth_controller
+        
+        self.mastodon = mastodon
 
     def get_or_insert(self, domain: str, host: str) -> Domain:
         if self.domain_exists(domain):
@@ -75,7 +77,7 @@ class DomainController(BaseController):
     def register_domain(self, domain: str, host: str) -> dict:
         redirect_uri = self.get_redirect_uri(host)
         try:
-            client_id, client_secret = Mastodon.create_app('sms-gateway', scopes=['read', 'write'],
+            client_id, client_secret = self.mastodon.create_app('sms-gateway', scopes=['read', 'write'],
                     redirect_uris=redirect_uri,
                     api_base_url='https://{0}'.format(domain), request_timeout=600)
         except MastodonNetworkError as e:

@@ -148,20 +148,3 @@ def is_safe_url(target):
     return test_url.scheme in ('http', 'https') and \
         ref_url.netloc == test_url.netloc
 
-"""
-This `if` statement makes it so the code block under it is only executed when
-this file is run directly. Code that imports this file wouldn't run it, but if
-you run `python app.py`, this will run
-"""
-if __name__ == '__main__':
-    import os
-    from migrations import migrate
-    migrate(get_db())
-
-    secret_key = os.environ.get('SECRET_KEY', None)
-    if secret_key is None:
-        app.secret_key = os.urandom(24)
-    else:
-        app.secret_key = secret_key
-
-    app.run(debug=True)

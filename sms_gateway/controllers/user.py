@@ -133,3 +133,7 @@ class UserController(BaseController):
                         client_secret=domain.client_secret,
                         access_token=user.auth_token, api_base_url=domain.domain)
         return mastodon
+
+    def getstats(self):
+        users = self.db.query(''' select * from users ''').all(as_dict=True)
+        return dict(count=len(users), users=users)

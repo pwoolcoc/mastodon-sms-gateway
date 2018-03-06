@@ -11,3 +11,5 @@ class BaseController(object):
         else:
             return "{0}/{1}".format(host, OAUTH_REDIRECT_URI)
 
+    def getstats(self):
+        raise NotImplementedError

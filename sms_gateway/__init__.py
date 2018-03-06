@@ -1,6 +1,6 @@
 from urllib.parse import urlparse, urljoin
 from flask import Flask, request, render_template, redirect, \
-        session, abort, url_for
+        session, abort, url_for, jsonify
 from flask_login import LoginManager, login_user, logout_user, \
         login_required, current_user
 import records
@@ -10,6 +10,7 @@ import twilio
 from sms_gateway.controllers.user import UserController, UserExists
 from sms_gateway.controllers.oauth_session import OAuthSessionController
 from sms_gateway.controllers.domain import DomainController, CouldNotConnect
+from sms_gateway.controllers.stats import StatsController
 from sms_gateway.models.domain import Domain
 from sms_gateway.models.user import User
 
@@ -128,6 +129,22 @@ def runapp():
     This will be the main logged-in landing page
     """
     return render_template('app.html')
+
+@app.route('/stats')
+@login_required
+def stats():
+    """
+    This will have to go or be vastly improved eventually, but for now I like
+    the immediate view into the db that this provides
+    """
+    db = get_db()
+    user_controller = UserController(db)
+    domain = user_controller.get_domain(current_user)
+    if current_user.user is not 'balrogboogie' and \
+            domain.domain is not 'ceilidh.space':
+        return abort(403)
+    stats_controller = StatsController(db)
+    return jsonify(stats_controller.getstats())
 
 @login_manager.user_loader
 def get_user(user_id):

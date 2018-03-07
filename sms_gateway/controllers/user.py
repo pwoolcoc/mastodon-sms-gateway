@@ -1,4 +1,4 @@
-from flask import session, Session
+from flask import Session
 from mastodon import Mastodon
 from records import Database
 from uuid import uuid4
@@ -35,19 +35,18 @@ class UserController(BaseController):
 
         self.mastodon = mastodon
 
-    def begin_registration(self, user: str, host) -> str:
+    def begin_registration(self, user: str, host: str) -> (str, str):
         user, domain = self.extract_user_domain(user)
         if user is None or domain is None:
             raise ValueError('incorrect user string')
         else:
             redirect_uri = self.get_register_uri(user, domain, host)
-            sess = self.oauth_controller.add(user, domain)
-            session['signup_uuid'] = sess['uuid']
-            return redirect_uri
+            session = self.oauth_controller.add(user, domain)
+            return redirect_uri, session
 
-    def extract_user_domain(self, user):
+    def extract_user_domain(self, user: str):
         if user is None:
-            return None
+            return None, None
         user, domain = user.lstrip('@').split('@')
         return (user, domain)
 
@@ -124,8 +123,6 @@ class UserController(BaseController):
     def validate_and_login(self, user: str) -> User:
         user, domain = self.extract_user_domain(user)
         user_rec = self.get_by_user_and_domain(user, domain)
-        if user_rec is None:
-            raise UserNotFound
         return user_rec
 
     def get_domain(self, user: User) -> Domain:

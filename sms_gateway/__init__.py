@@ -67,8 +67,9 @@ def signup():
         db = get_db()
         user_controller = UserController(db)
         try:
-            redirect_uri = user_controller.begin_registration(user,
+            redirect_uri, sess = user_controller.begin_registration(user,
                     request.host_url)
+            session['signup_uuid'] = sess['uuid']
             return redirect(redirect_uri)
         except CouldNotConnect as e:
             error = "Could not connect to host {0}".format(e)

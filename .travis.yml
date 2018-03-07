@@ -5,6 +5,6 @@ install:
   - pip install pipenv
   - pipenv install --skip-lock
 script:
-  - pytest -vs tests
+  - pytest -vs --cov sms_gateway --cov-report term-missing tests
 after_success:
   - coveralls

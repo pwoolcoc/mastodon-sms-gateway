@@ -1,6 +1,7 @@
 = Mastodon SMS Bridge
 
 image:https://travis-ci.org/pwoolcoc/mastodon-sms-gateway.svg?branch=master["Build Status", link="https://travis-ci.org/pwoolcoc/mastodon-sms-gateway"]
+image:https://coveralls.io/repos/github/pwoolcoc/mastodon-sms-gateway/badge.svg?branch=master[Coverage Status, link="https://coveralls.io/github/pwoolcoc/mastodon-sms-gateway?branch=master"]
 
 This is a small application that let's a mastodon user connect their account
 with an SMS number, which then lets them do some tooting over a standard SMS

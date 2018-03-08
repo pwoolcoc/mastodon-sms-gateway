@@ -35,7 +35,7 @@ class UserController(BaseController):
 
         self.mastodon = mastodon
 
-    def begin_registration(self, user: str, host: str) -> (str, str):
+    def begin_authorize(self, user: str, host: str) -> (str, str):
         user, domain = self.extract_user_domain(user)
         if user is None or domain is None:
             raise ValueError('incorrect user string')

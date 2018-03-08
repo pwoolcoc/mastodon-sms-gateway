@@ -66,23 +66,19 @@ def test_get_auth_token(user_controller, single_user):
             redirect_uri='http://example.com/redirect',
             scopes=['read', 'write'])
 
-def test_begin_registration(user_controller, db_setup):
+def test_begin_authorize(user_controller, db_setup):
     user_controller.mastodon.auth_request_url = Mock(name='auth_request_url')
     user_controller.mastodon.create_app = Mock(name='create_app',
             return_value=('abcd', 'efgh'))
-    redirect_uri = user_controller.begin_registration("foo@my.domain",
+    redirect_uri = user_controller.begin_authorize("foo@my.domain",
             "http://example.com")
     user_controller.mastodon.auth_request_url.assert_called_once_with(
             scopes=['read', 'write'],
             redirect_uris='http://example.com/redirect')
 
-def test_begin_registration_no_user(user_controller):
+def test_begin_authorize_no_user(user_controller):
     with pytest.raises(ValueError):
-        user_controller.begin_registration(None, 'http://example.com')
-
-def test_begin_registration_existing_user(user_controller, single_user):
-    with pytest.raises(UserExists):
-        user_controller.begin_registration('foo@my.domain', 'http://example.com')
+        user_controller.begin_authorize(None, 'http://example.com')
 
 def test_create(user_controller, db_setup):
     domain = Domain(id=1, client_id='01234', client_secret='ghefcdab',

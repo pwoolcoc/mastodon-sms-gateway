@@ -91,12 +91,10 @@ class UserController(BaseController):
 
     def create(self, username: str, domain: Domain, auth_token: str) -> User:
         uuid = str(uuid4())
-        with self.db.transaction() as tx:
-            self.db.query('''
-            insert into users (uuid, user, auth_token, domain_id)
-            values (:uuid, :user, :auth_token, :domain_id)
-            ''', uuid=uuid, user=username, auth_token=auth_token, domain_id=domain.id)
-            tx.commit()
+        self.db.query('''
+        insert into users (uuid, user, auth_token, domain_id)
+        values (:uuid, :user, :auth_token, :domain_id)
+        ''', uuid=uuid, user=username, auth_token=auth_token, domain_id=domain.id)
         return self.get_by_id(uuid)
 
     def create_from_session(self, code: str, session: Session, host: str) -> User:

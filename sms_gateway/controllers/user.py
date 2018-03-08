@@ -95,13 +95,27 @@ class UserController(BaseController):
         ''', uuid=uuid, user=username, auth_token=auth_token, domain_id=domain.id)
         return self.get_by_id(uuid)
 
+    def update(self, user: User, domain: Domain, auth_token: str) -> User:
+        db.query('''
+        update users set auth_token = :auth_token
+        where user = :user and domain_id = :domain_id
+        ''', user=user.user, domain=domain.id, auth_token=auth_token)
+        return self.get_by_id(user.uuid) # get a user objects with the new values
+
+    def create_or_update(self, username: str, domain: Domain, auth_token: str) -> User:
+        user = self.get_by_user_and_domain(username, domain.domain, default=None)
+        if user is not None:
+            return self.update(user, domain, auth_token)
+        else:
+            return self.create(username, domain, auth_token)
+
     def create_from_session(self, code: str, session: Session, host: str) -> User:
         try:
             uuid = session['auth_uuid']
             oauth_session = self.oauth_controller.get(uuid)
             domain = self.domain_controller.get_domain(oauth_session['domain'])
             auth_token = self.get_auth_token(code, domain, host)
-            return self.create(oauth_session['user'], domain, auth_token)
+            return self.create_or_update(oauth_session['user'], domain, auth_token)
         finally:
             self.oauth_controller.delete(uuid)
 

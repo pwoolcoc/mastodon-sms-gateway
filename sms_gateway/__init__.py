@@ -64,21 +64,9 @@ def signup():
     error = None
     if request.method == 'POST':
         user = request.form['user']
-        db = get_db()
-        user_controller = UserController(db)
-        try:
-            redirect_uri, sess = user_controller.begin_authorize(user,
-                    request.host_url)
-            session['auth_uuid'] = sess['uuid']
+        redirect_uri, error = start_auth(user)
+        if error is None:
             return redirect(redirect_uri)
-        except CouldNotConnect as e:
-            error = "Could not connect to host {0}".format(e)
-        except ValueError as e:
-            error = e
-        except UserExists:
-            user = user_controller.validate_and_login(user)
-            return do_login(user, user_controller)
-
     return render_template('signup.html', error=error)
 
 @app.route('/login', methods=('GET', 'POST'))
@@ -87,12 +75,27 @@ def login():
     This route serves both the login form and also handles the POST from the
     login form
     """
+    error = None
     if request.method == 'POST':
         user = request.form['user']
-        user_controller = UserController(get_db())
-        user = user_controller.validate_and_login(user)
-        return do_login(user, user_controller)
-    return render_template('login.html')
+        redirect_uri, error = start_auth(user)
+        if error is None:
+            return redirect(redirect_uri)
+    return render_template('login.html', error=error)
+
+def start_auth(user):
+    error = None
+    user_controller = UserController(get_db())
+    try:
+        redirect_uri, sess = user_controller.begin_authorize(user,
+                request.host_url)
+        session['auth_uuid'] = sess['uuid']
+        return redirect_uri, None
+    except CouldNotConnector as e:
+        error = "Could not connect to host {0}".format(e)
+    except ValueError as e:
+        error = e
+    return None, error
 
 def do_login(user: User, user_controller: UserController):
     """

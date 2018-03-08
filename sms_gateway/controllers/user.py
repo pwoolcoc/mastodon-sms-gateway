@@ -96,10 +96,10 @@ class UserController(BaseController):
         return self.get_by_id(uuid)
 
     def update(self, user: User, domain: Domain, auth_token: str) -> User:
-        db.query('''
+        self.db.query('''
         update users set auth_token = :auth_token
         where user = :user and domain_id = :domain_id
-        ''', user=user.user, domain=domain.id, auth_token=auth_token)
+        ''', user=user.user, domain_id=domain.id, auth_token=auth_token)
         return self.get_by_id(user.uuid) # get a user objects with the new values
 
     def create_or_update(self, username: str, domain: Domain, auth_token: str) -> User:

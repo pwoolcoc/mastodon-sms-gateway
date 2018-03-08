@@ -97,7 +97,7 @@ def test_get_by_id_not_found(user_controller, db_setup):
 def test_create_from_session(user_controller, single_oauth_session, single_domain):
     user_controller.mastodon.log_in = Mock(name='log_in', return_value='12345678')
     res = user_controller.create_from_session('grantcode',
-            dict(signup_uuid=single_oauth_session), 'http://example.com')
+            dict(auth_uuid=single_oauth_session), 'http://example.com')
     assert res is not None
 
 def test_get_domain(user_controller, single_user):

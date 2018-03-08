@@ -99,7 +99,7 @@ class UserController(BaseController):
 
     def create_from_session(self, code: str, session: Session, host: str) -> User:
         try:
-            uuid = session['signup_uuid']
+            uuid = session['auth_uuid']
             oauth_session = self.oauth_controller.get(uuid)
             domain = self.domain_controller.get_domain(oauth_session['domain'])
             auth_token = self.get_auth_token(code, domain, host)

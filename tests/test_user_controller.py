@@ -139,3 +139,13 @@ def test_update(user_controller, single_user):
     new_user = user_controller.update(user, domain, 'newauthtoken')
     assert new_user.auth_token == 'newauthtoken'
 
+def test_update_using_create_or_update(user_controller, single_user):
+    user = user_controller.get_by_id(single_user)
+    domain = user_controller.get_domain(user)
+    new_user = user_controller.create_or_update(user.user, domain,
+            'newauthtoken')
+    assert new_user.id == user.id
+    assert new_user.uuid == user.uuid
+    assert new_user.user == user.user
+    assert new_user.auth_token == 'newauthtoken'
+    assert new_user.domain_id == user.domain_id

@@ -40,7 +40,7 @@ class UserController(BaseController):
         if user is None or domain is None:
             raise ValueError('incorrect user string')
         else:
-            redirect_uri = self.get_register_uri(user, domain, host)
+            redirect_uri = self.get_register_uri(domain, host)
             session = self.oauth_controller.add(user, domain)
             return redirect_uri, session
 
@@ -50,9 +50,7 @@ class UserController(BaseController):
         user, domain = user.lstrip('@').split('@')
         return (user, domain)
 
-    def get_register_uri(self, user: str, domain: str, host: str) -> str:
-        if self.user_exists(user, domain):
-            raise UserExists
+    def get_register_uri(self, domain: str, host: str) -> str:
         domain = self.domain_controller.get_or_insert(domain, host)
         mastodon = self.mastodon(client_id=domain.client_id,
                             client_secret=domain.client_secret,

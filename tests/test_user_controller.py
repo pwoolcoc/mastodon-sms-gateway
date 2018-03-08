@@ -66,23 +66,19 @@ def test_get_auth_token(user_controller, single_user):
             redirect_uri='http://example.com/redirect',
             scopes=['read', 'write'])
 
-def test_begin_registration(user_controller, db_setup):
+def test_begin_authorize(user_controller, db_setup):
     user_controller.mastodon.auth_request_url = Mock(name='auth_request_url')
     user_controller.mastodon.create_app = Mock(name='create_app',
             return_value=('abcd', 'efgh'))
-    redirect_uri = user_controller.begin_registration("foo@my.domain",
+    redirect_uri = user_controller.begin_authorize("foo@my.domain",
             "http://example.com")
     user_controller.mastodon.auth_request_url.assert_called_once_with(
             scopes=['read', 'write'],
             redirect_uris='http://example.com/redirect')
 
-def test_begin_registration_no_user(user_controller):
+def test_begin_authorize_no_user(user_controller):
     with pytest.raises(ValueError):
-        user_controller.begin_registration(None, 'http://example.com')
-
-def test_begin_registration_existing_user(user_controller, single_user):
-    with pytest.raises(UserExists):
-        user_controller.begin_registration('foo@my.domain', 'http://example.com')
+        user_controller.begin_authorize(None, 'http://example.com')
 
 def test_create(user_controller, db_setup):
     domain = Domain(id=1, client_id='01234', client_secret='ghefcdab',
@@ -101,7 +97,7 @@ def test_get_by_id_not_found(user_controller, db_setup):
 def test_create_from_session(user_controller, single_oauth_session, single_domain):
     user_controller.mastodon.log_in = Mock(name='log_in', return_value='12345678')
     res = user_controller.create_from_session('grantcode',
-            dict(signup_uuid=single_oauth_session), 'http://example.com')
+            dict(auth_uuid=single_oauth_session), 'http://example.com')
     assert res is not None
 
 def test_get_domain(user_controller, single_user):
@@ -136,3 +132,20 @@ def test_get_stats(user_controller, single_user):
     stats = user_controller.getstats()
     assert stats['count'] == 1
     assert stats['users'][0] is not None
+
+def test_update(user_controller, single_user):
+    user = user_controller.get_by_id(single_user)
+    domain = user_controller.get_domain(user)
+    new_user = user_controller.update(user, domain, 'newauthtoken')
+    assert new_user.auth_token == 'newauthtoken'
+
+def test_update_using_create_or_update(user_controller, single_user):
+    user = user_controller.get_by_id(single_user)
+    domain = user_controller.get_domain(user)
+    new_user = user_controller.create_or_update(user.user, domain,
+            'newauthtoken')
+    assert new_user.id == user.id
+    assert new_user.uuid == user.uuid
+    assert new_user.user == user.user
+    assert new_user.auth_token == 'newauthtoken'
+    assert new_user.domain_id == user.domain_id

@@ -35,12 +35,12 @@ class UserController(BaseController):
 
         self.mastodon = mastodon
 
-    def begin_registration(self, user: str, host: str) -> (str, str):
+    def begin_authorize(self, user: str, host: str) -> (str, str):
         user, domain = self.extract_user_domain(user)
         if user is None or domain is None:
             raise ValueError('incorrect user string')
         else:
-            redirect_uri = self.get_register_uri(user, domain, host)
+            redirect_uri = self.get_register_uri(domain, host)
             session = self.oauth_controller.add(user, domain)
             return redirect_uri, session
 
@@ -50,9 +50,7 @@ class UserController(BaseController):
         user, domain = user.lstrip('@').split('@')
         return (user, domain)
 
-    def get_register_uri(self, user: str, domain: str, host: str) -> str:
-        if self.user_exists(user, domain):
-            raise UserExists
+    def get_register_uri(self, domain: str, host: str) -> str:
         domain = self.domain_controller.get_or_insert(domain, host)
         mastodon = self.mastodon(client_id=domain.client_id,
                             client_secret=domain.client_secret,
@@ -91,21 +89,33 @@ class UserController(BaseController):
 
     def create(self, username: str, domain: Domain, auth_token: str) -> User:
         uuid = str(uuid4())
-        with self.db.transaction() as tx:
-            self.db.query('''
-            insert into users (uuid, user, auth_token, domain_id)
-            values (:uuid, :user, :auth_token, :domain_id)
-            ''', uuid=uuid, user=username, auth_token=auth_token, domain_id=domain.id)
-            tx.commit()
+        self.db.query('''
+        insert into users (uuid, user, auth_token, domain_id)
+        values (:uuid, :user, :auth_token, :domain_id)
+        ''', uuid=uuid, user=username, auth_token=auth_token, domain_id=domain.id)
         return self.get_by_id(uuid)
+
+    def update(self, user: User, domain: Domain, auth_token: str) -> User:
+        self.db.query('''
+        update users set auth_token = :auth_token
+        where user = :user and domain_id = :domain_id
+        ''', user=user.user, domain_id=domain.id, auth_token=auth_token)
+        return self.get_by_id(user.uuid) # get a user objects with the new values
+
+    def create_or_update(self, username: str, domain: Domain, auth_token: str) -> User:
+        user = self.get_by_user_and_domain(username, domain.domain, default=None)
+        if user is not None:
+            return self.update(user, domain, auth_token)
+        else:
+            return self.create(username, domain, auth_token)
 
     def create_from_session(self, code: str, session: Session, host: str) -> User:
         try:
-            uuid = session['signup_uuid']
+            uuid = session['auth_uuid']
             oauth_session = self.oauth_controller.get(uuid)
             domain = self.domain_controller.get_domain(oauth_session['domain'])
             auth_token = self.get_auth_token(code, domain, host)
-            return self.create(oauth_session['user'], domain, auth_token)
+            return self.create_or_update(oauth_session['user'], domain, auth_token)
         finally:
             self.oauth_controller.delete(uuid)
 

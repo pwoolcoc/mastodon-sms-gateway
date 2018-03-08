@@ -132,3 +132,10 @@ def test_get_stats(user_controller, single_user):
     stats = user_controller.getstats()
     assert stats['count'] == 1
     assert stats['users'][0] is not None
+
+def test_update(user_controller, single_user):
+    user = user_controller.get_by_id(single_user)
+    domain = user_controller.get_domain(user)
+    new_user = user_controller.update(user, domain, 'newauthtoken')
+    assert new_user.auth_token == 'newauthtoken'
+

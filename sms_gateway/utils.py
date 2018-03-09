@@ -8,6 +8,7 @@ __all__ = ['get_db', 'is_safe_url']
 # SQL stuff (not that sqlite can DO much crazy SQL stuff)
 DEFAULT_DATABASE_URL = "sqlite:////tmp/mastotwilio.db"
 
+
 def get_db():
     """
     Since we've defined all our routes in this module, this provides us with an
@@ -18,6 +19,7 @@ def get_db():
     connstr = os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
     return records.Database(connstr)
 
+
 def is_safe_url(target, host_url):
     """
     Shamelessly stolen from a flask snippet, to make sure we don't redirect to
@@ -27,4 +29,3 @@ def is_safe_url(target, host_url):
     test_url = urlparse(urljoin(host_url, target))
     return test_url.scheme in ('http', 'https') and \
         ref_url.netloc == test_url.netloc
-

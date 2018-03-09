@@ -11,15 +11,18 @@ from sms_gateway.models.domain import Domain
 
 sentinel = object()
 
+
 class UserExists(Exception):
     pass
+
 
 class UserNotFound(Exception):
     pass
 
+
 class UserController(BaseController):
     def __init__(self, db: Database, oauth_controller=None,
-            domain_controller=None, mastodon=Mastodon):
+                 domain_controller=None, mastodon=Mastodon):
         self.db = db
         if domain_controller is None:
             self.domain_controller = DomainController(db)
@@ -53,10 +56,10 @@ class UserController(BaseController):
     def get_register_uri(self, domain: str, host: str) -> str:
         domain = self.domain_controller.get_or_insert(domain, host)
         mastodon = self.mastodon(client_id=domain.client_id,
-                            client_secret=domain.client_secret,
-                            api_base_url=domain.domain)
+                                 client_secret=domain.client_secret,
+                                 api_base_url=domain.domain)
         return mastodon.auth_request_url(scopes=['read', 'write'],
-                redirect_uris=self.get_redirect_uri(host))
+                                         redirect_uris=self.get_redirect_uri(host))
 
     def get_by_user_and_domain(self, user: str, domain: str, default=sentinel) -> User:
         result = self.db.query('''
@@ -82,9 +85,10 @@ class UserController(BaseController):
 
     def get_auth_token(self, grant_code: str, domain: Domain, host: str) -> str:
         mastodon = self.mastodon(client_id=domain.client_id,
-                client_secret=domain.client_secret, api_base_url=domain.domain)
+                                 client_secret=domain.client_secret, api_base_url=domain.domain)
         auth_token = mastodon.log_in(code=grant_code,
-            redirect_uri=self.get_redirect_uri(host), scopes=['read', 'write'])
+                                     redirect_uri=self.get_redirect_uri(host),
+                                     scopes=['read', 'write'])
         return auth_token
 
     def create(self, username: str, domain: Domain, auth_token: str) -> User:
@@ -100,7 +104,7 @@ class UserController(BaseController):
         update users set auth_token = :auth_token
         where user = :user and domain_id = :domain_id
         ''', user=user.user, domain_id=domain.id, auth_token=auth_token)
-        return self.get_by_id(user.uuid) # get a user objects with the new values
+        return self.get_by_id(user.uuid)  # get a user objects with the new values
 
     def create_or_update(self, username: str, domain: Domain, auth_token: str) -> User:
         user = self.get_by_user_and_domain(username, domain.domain, default=None)
@@ -141,8 +145,8 @@ class UserController(BaseController):
     def get_masto_client(self, user: User) -> Mastodon:
         domain = self.get_domain(user)
         mastodon = self.mastodon(client_id=domain.client_id,
-                        client_secret=domain.client_secret,
-                        access_token=user.auth_token, api_base_url=domain.domain)
+                                 client_secret=domain.client_secret,
+                                 access_token=user.auth_token, api_base_url=domain.domain)
         return mastodon
 
     def getstats(self):

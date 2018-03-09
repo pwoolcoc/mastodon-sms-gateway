@@ -7,11 +7,14 @@ from sms_gateway.controllers.base import BaseController
 from sms_gateway.controllers.oauth_session import OAuthSessionController
 from sms_gateway.models.domain import Domain
 
+
 class CouldNotConnect(Exception):
     pass
 
+
 class DomainDoesntExist(Exception):
     pass
+
 
 class DomainController(BaseController):
     def __init__(self, db: Database, oauth_controller=None, mastodon=Mastodon):
@@ -21,7 +24,7 @@ class DomainController(BaseController):
             self.oauth_controller = OAuthSessionController(db)
         else:
             self.oauth_controller = oauth_controller
-        
+
         self.mastodon = mastodon
 
     def get_or_insert(self, domain: str, host: str) -> Domain:
@@ -54,7 +57,7 @@ class DomainController(BaseController):
 
     def insert_new_domain(self, domain: str, host: str) -> Domain:
         fulldomain = self.register_domain(domain, host)
-        #TODO when upgrading to 0.5.3/0.6, this will need to change to:
+        # TODO when upgrading to 0.5.3/0.6, this will need to change to:
         # with db.transaction() as conn:
         #     conn.query(..)
         with self.db.transaction() as tx:
@@ -77,13 +80,16 @@ class DomainController(BaseController):
     def register_domain(self, domain: str, host: str) -> dict:
         redirect_uri = self.get_redirect_uri(host)
         try:
-            client_id, client_secret = self.mastodon.create_app('sms-gateway', scopes=['read', 'write'],
-                    redirect_uris=redirect_uri,
-                    api_base_url='https://{0}'.format(domain), request_timeout=600)
+            base_url = 'https://{0}'.format(domain)
+            client_id, client_secret = self.mastodon.create_app('sms-gateway',
+                                                                scopes=['read', 'write'],
+                                                                redirect_uris=redirect_uri,
+                                                                api_base_url=base_url,
+                                                                request_timeout=600)
         except MastodonNetworkError as e:
             raise CouldNotConnect(domain)
         return dict(domain=domain, client_id=client_id,
-                client_secret=client_secret)
+                    client_secret=client_secret)
 
     def from_session(self, session: Session) -> Domain:
         sess_uuid = session['uuid']

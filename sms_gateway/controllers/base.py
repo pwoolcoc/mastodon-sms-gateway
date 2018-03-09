@@ -4,6 +4,7 @@ OAUTH_REDIRECT_URI = 'redirect'
 
 __all__ = ['BaseController']
 
+
 class BaseController(object):
     def get_redirect_uri(self, host):
         if host.endswith('/'):

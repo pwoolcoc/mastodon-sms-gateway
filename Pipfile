@@ -16,6 +16,7 @@ flask-login = "*"
 pytest = "*"
 pytest-cov = "*"
 python-coveralls = "*"
+pycodestyle = "*"
 
 
 [dev-packages]

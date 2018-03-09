@@ -9,7 +9,8 @@ def ensure_migrations_table_exists(db):
         )
         ''')
 
-def migrate(db): # pragma: no cover
+
+def migrate(db):  # pragma: no cover
     ensure_migrations_table_exists(db)
     rows = db.query('select max(num) as max_num from migrations')
     result = rows.first()
@@ -26,7 +27,7 @@ def migrate(db): # pragma: no cover
         ''', num=num+i, migration=migration)
 
 
-def unmigrate(db): # pragma: no cover
+def unmigrate(db):  # pragma: no cover
     rows = db.query('select max(num) as max_num from migrations')
     result = rows.first()
     max_num = result['max_num']
@@ -40,6 +41,7 @@ def unmigrate(db): # pragma: no cover
         delete from migrations
         where num = :num
         ''', num=num-i-1)
+
 
 UP = [
     '''

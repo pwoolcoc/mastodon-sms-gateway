@@ -19,12 +19,14 @@ login_manager = LoginManager(app)
 
 app.register_blueprint(auth)
 
+
 @app.route('/', methods=('GET',))
 def index():
     """
     This will be the main non-logged-in landing page
     """
     return render_template('index.html')
+
 
 @app.route('/app')
 @login_required
@@ -33,6 +35,7 @@ def runapp():
     This will be the main logged-in landing page
     """
     return render_template('app.html')
+
 
 @app.route('/stats')
 @login_required
@@ -50,6 +53,7 @@ def stats():
     stats_controller = StatsController(db)
     return jsonify(stats_controller.getstats())
 
+
 @login_manager.user_loader
 def get_user(user_id):
     """
@@ -58,4 +62,3 @@ def get_user(user_id):
     """
     user_controller = UserController(get_db())
     return user_controller.get_by_id(user_id)
-

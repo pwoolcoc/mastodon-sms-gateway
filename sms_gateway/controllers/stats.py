@@ -4,6 +4,7 @@ from sms_gateway.controllers.domain import DomainController
 
 __all__ = ['StatsController']
 
+
 class StatsController(BaseController):
     def __init__(self, db, user_controller=None, domain_controller=None):
         self.db = db
@@ -22,4 +23,3 @@ class StatsController(BaseController):
         user_stats = self.user_controller.getstats()
         domain_stats = self.domain_controller.getstats()
         return dict(users=user_stats, domains=domain_stats)
-

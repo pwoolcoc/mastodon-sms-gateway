@@ -4,6 +4,7 @@ from records import Database
 
 from sms_gateway.controllers.base import BaseController
 
+
 class OAuthSessionController(BaseController):
     def __init__(self, db: Database):
         self.db = db

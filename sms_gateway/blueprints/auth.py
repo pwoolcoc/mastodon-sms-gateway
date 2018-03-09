@@ -12,6 +12,7 @@ __all__ = ['auth']
 
 auth = Blueprint('auth', __name__, template_folder='templates')
 
+
 @auth.route('/redirect', methods=('GET', 'POST'))
 def oauth_masto_redirect():
     """
@@ -24,10 +25,11 @@ def oauth_masto_redirect():
     oauth_controller = OAuthSessionController(db)
     domain_controller = DomainController(db, oauth_controller=oauth_controller)
     user_controller = UserController(db, oauth_controller=oauth_controller,
-            domain_controller=domain_controller)
+                                     domain_controller=domain_controller)
 
     user = user_controller.create_from_session(code, session, request.host_url)
     return do_login(user, user_controller)
+
 
 @auth.route("/signup", methods=('GET', 'POST'))
 def signup():
@@ -46,6 +48,7 @@ def signup():
             return redirect(redirect_uri)
     return render_template('signup.html', error=error)
 
+
 @auth.route('/login', methods=('GET', 'POST'))
 def login():
     """
@@ -60,12 +63,13 @@ def login():
             return redirect(redirect_uri)
     return render_template('login.html', error=error)
 
+
 def start_auth(user):
     error = None
     user_controller = UserController(get_db())
     try:
         redirect_uri, sess = user_controller.begin_authorize(user,
-                request.host_url)
+                                                             request.host_url)
         session['auth_uuid'] = sess['uuid']
         return redirect_uri, None
     except CouldNotConnect as e:
@@ -73,6 +77,7 @@ def start_auth(user):
     except ValueError as e:
         error = e
     return None, error
+
 
 def do_login(user: User, user_controller: UserController):
     """
@@ -88,6 +93,7 @@ def do_login(user: User, user_controller: UserController):
 
     return redirect(next or url_for('runapp'))
 
+
 @auth.route("/logout")
 def logout():
     """
@@ -95,4 +101,3 @@ def logout():
     """
     logout_user()
     return redirect(url_for('index'))
-
